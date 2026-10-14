@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MICROPARA — Offline Micro-Parasitology Screening Instrument</title>
+<link rel="stylesheet" href="styles.css">
+<!-- PanParasite-Edge Status: served by embedded C++ server -->
+</head>
+<body>
+<header id="topbar">
+  <div class="hdr-left">
+    <span id="brand">MICROPARA</span>
+    <span id="hdrSection">ANALYZE</span>
+  </div>
+  <div class="hdr-center">
+    <span id="caseLabel">CASE #24061 | Sample 01</span>
+    <button id="btnSuspend" type="button">SUSPEND ACTIVE SESSION</button>
+  </div>
+  <div class="hdr-right">
+    <span id="offlineBadge"><span class="dot"></span>OFFLINE | SYSTEM READY</span>
+  </div>
+</header>
+
+<div id="shell">
+  <nav id="sidenav">
+    <button class="nav-item active" id="navAnalyze" data-view="analyze" type="button" data-i18n="nav_analyze">ANALYZE</button>
+    <button class="nav-item" id="navResults" data-view="results" type="button" data-i18n="nav_results">RESULTS</button>
+    <button class="nav-item" id="navHistory" data-view="history" type="button" data-i18n="nav_history">HISTORY</button>
+    <button class="nav-item" id="navDevice" data-view="device" type="button" data-i18n="nav_device">DEVICE</button>
+    <button class="nav-item" id="navSettings" data-view="settings" type="button" data-i18n="nav_settings">SETTINGS</button>
+    <div id="liveFlag">LOCAL DEMO STATE</div>
+  </nav>
+
+  <main id="workspace">
+    <!-- ============ ANALYZE ============ -->
+    <section id="view-analyze" class="view">
+      <!-- State 1 -->
+      <div id="st1" class="wstate">
+        <h2 data-i18n="start_title">Screening Workspace</h2>
+        <button id="btnStart" type="button" data-i18n="start_btn">START NEW SCREENING</button>
+        <h3 data-i18n="resume_title">Resumable sessions</h3>
+        <div id="resumeCards"><p class="muted">No suspended sessions.</p></div>
+      </div>
+
+      <!-- State 2 -->
+      <div id="st2" class="wstate hidden">
+        <h2>Case &amp; Sample Setup</h2>
+        <div class="twocol">
+          <div class="autocol">
+            <label>Case ID <input id="caseIdAuto" type="text" readonly></label>
+            <label>Date / Time <input id="caseDateAuto" type="text" readonly></label>
+            <label>Device ID <input id="deviceIdAuto" type="text" readonly></label>
+          </div>
+          <div class="askcol">
+            <label>Sample ID <input id="sampleId" type="text" value="Sample 01"></label>
+            <label>Sample Type
+              <select id="sampleType">
+                <option>Fecal Kato-Katz</option>
+                <option>Urinary Sediment</option>
+              </select>
+            </label>
+            <label>Notes (optional) <textarea id="sampleNotes" rows="3"></textarea></label>
+          </div>
+        </div>
+        <button id="btnBackSetup" type="button" class="ghost">BACK</button>
+        <button id="btnBegin" type="button">BEGIN ANALYSIS</button>
+      </div>
+
+      <!-- State 3 -->
+      <div id="st3" class="wstate hidden">
+        <div id="wsSplit">
+          <div id="viewportWrap">
+            <div id="densityBanner" class="hidden">High candidate density. Move the slide slightly to evaluate remaining targets.</div>
+            <canvas id="specCanvas" width="960" height="540"></canvas>
+            <div id="contrastBadge" class="hidden">Target Contrast Enhanced</div>
+            <canvas id="minimap" width="180" height="120"></canvas>
+            <div id="imgControls">
+              <button id="zoomOut" type="button">-</button>
+              <button id="zoomLabel" type="button">100%</button>
+              <button id="zoomIn" type="button">+</button>
+              <button id="zoomFit" type="button">FIT</button>
+              <button id="zoomReset" type="button">RESET</button>
+              <span class="sep"></span>
+              <button id="densityNormal" class="density-btn active" data-density="normal" type="button">Normal</button>
+              <button id="densityHigh" class="density-btn" data-density="high" type="button">High-density</button>
+              <button id="densityOccluded" class="density-btn" data-density="occluded" type="button">Occluded</button>
+            </div>
+            <div id="fieldLabel">Field A1</div>
+          </div>
+          <aside id="findingsPanel">
+            <h3>Findings <span id="findingsCount"></span></h3>
+            <div id="findingsList"></div>
+            <button id="btnToReview" type="button">CONTINUE TO RESULT</button>
+          </aside>
+        </div>
+      </div>
+
+      <!-- State 5 -->
+      <div id="st5" class="wstate hidden">
+        <h2>Screening Result</h2>
+        <div id="resultState" class="calm-box"></div>
+        <h3>Confirmed findings by species</h3>
+        <div id="resultSpecies"></div>
+        <p>Dismissed artifacts: <b id="dismissedCount">0</b></p>
+        <p>Image quality: <b id="imageQuality">Good</b></p>
+        <button id="btnGenerateReport" type="button">GENERATE REPORT</button>
+      </div>
+
+      <!-- State 6 -->
+      <div id="st6" class="wstate hidden">
+        <h2>Report Preview</h2>
+        <div id="reportPreview" class="calm-box"></div>
+        <h3>System-generated information</h3>
+        <div id="sysInfo" class="calm-box"></div>
+        <h3>Technician-entered notes</h3>
+        <textarea id="techNotes" rows="3" placeholder="Optional notes for the record"></textarea>
+        <p class="disclaimer">Screening disclaimer: this instrument assists microscopy review and does not replace trained clinical judgment. Correlate with clinical findings.</p>
+        <div id="verifyBox" class="calm-box">
+          <label><input id="verifyCheck" type="checkbox"> <span id="verifyText">Confirm that physical specimen tags match <b id="verifyCaseId">Case ID #24061</b> perfectly before report sign-off.</span></label>
+        </div>
+        <button id="btnFinalize" type="button" disabled>FINALIZE REPORT</button>
+        <div id="completeView" class="hidden">
+          <div id="savedStamp">REPORT SAVED</div>
+          <button id="btnViewReport" type="button">VIEW REPORT</button>
+          <button id="btnNewScreening2" type="button">START NEW SCREENING</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section id="view-results" class="view hidden">
+      <h2>Results</h2>
+      <div id="resultsList"></div>
+    </section>
+
+    <!-- ============ HISTORY ============ -->
+    <section id="view-history" class="view hidden">
+      <h2>History</h2>
+      <div id="historyFilters">
+        <input id="historySearch" type="search" placeholder="Search case / sample">
+        <input id="historyDate" type="date">
+        <select id="historyStatus">
+          <option value="">All statuses</option>
+          <option>Complete</option>
+          <option>In progress</option>
+        </select>
+        <select id="historyReview">
+          <option value="">All reviews</option>
+          <option>Flagged</option>
+          <option>Clean</option>
+        </select>
+      </div>
+      <table id="historyTable">
+        <thead><tr><th>Case</th><th>Sample</th><th>Date</th><th>Status</th><th>Review</th><th>Findings</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </section>
+
+    <!-- ============ DEVICE ============ -->
+    <section id="view-device" class="view hidden">
+      <h2>Device</h2>
+      <table id="deviceTable">
+        <thead><tr><th>Subsystem</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td>Microscope</td><td>READY</td></tr>
+          <tr><td>Image capture</td><td>READY</td></tr>
+          <tr><td>Analysis engine</td><td>READY</td></tr>
+          <tr><td>Local storage</td><td>READY</td></tr>
+          <tr><td>Display</td><td>READY</td></tr>
+          <tr><td>Link</td><td>OFFLINE · Local screening active</td></tr>
+        </tbody>
+      </table>
+      <button id="diagToggle" type="button">Hardware diagnostics</button>
+      <div id="diagBody" class="hidden calm-box">
+        <p>Static memory arena: <b>23.94 MB</b> pre-allocated (zero heap runtime hot path).</p>
+        <p>O_DIRECT ring buffer: <b id="ringStatus">256 sectors × 4096 B</b></p>
+        <p>Audit ledger: SHA-256 hash-chained SQLite, immutable triggers.</p>
+        <p>Inference: INT8 micro-net with FP32 fallback, Platt T = 1.38.</p>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="view-settings" class="view hidden">
+      <h2>Settings</h2>
+      <label>Language
+        <select id="setLang">
+          <option value="en">English</option>
+          <option value="te">తెలుగు (Telugu)</option>
+          <option value="hi">हिन्दी (Hindi)</option>
+        </select>
+      </label>
+      <label>Default sample type
+        <select id="setSampleType">
+          <option>Fecal Kato-Katz</option>
+          <option>Urinary Sediment</option>
+        </select>
+      </label>
+      <label>Focus threshold (Laplacian variance)
+        <input id="setFocusThreshold" type="text" value="125.0" readonly>
+      </label>
+      <p class="muted" id="settingsNote">Thresholds are fixed by the validated edge pipeline.</p>
+    </section>
+  </main>
+</div>
+
+<!-- State 4 overlay sheet: technical details (never resizes canvas) -->
+<div id="techSheet" class="hidden">
+  <button id="techClose" type="button">CLOSE</button>
+  <h3>Technical Details</h3>
+  <div id="techBody"></div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<!-- Bottom workflow bar: SAMPLE -> IMAGE -> ANALYSIS -> FINDINGS -> REVIEW -> RESULT -->
+<footer id="wfBar">
+  <span class="wf-step" data-s="0">SAMPLE</span><span class="wf-arrow">-&gt;</span>
+  <span class="wf-step" data-s="1">IMAGE</span><span class="wf-arrow">-&gt;</span>
+  <span class="wf-step" data-s="2">ANALYSIS</span><span class="wf-arrow">-&gt;</span>
+  <span class="wf-step" data-s="3">FINDINGS</span><span class="wf-arrow">-&gt;</span>
+  <span class="wf-step" data-s="4">REVIEW</span><span class="wf-arrow">-&gt;</span>
+  <span class="wf-step" data-s="5">RESULT</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
