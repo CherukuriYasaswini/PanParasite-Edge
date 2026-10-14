@@ -1,0 +1,35 @@
+# Build outputs
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# Object files / binaries
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.a
+*.so
+*.dll
+
+# Runtime artifacts (ring images, ledgers, captures)
+*.db
+*.sqlite
+*.sqlite3
+*.bin
+*.log
+
+# Python / OS / IDE
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+.vs/
+.idea/
+*.code-workspace
